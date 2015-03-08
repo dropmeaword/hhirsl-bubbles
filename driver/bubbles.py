@@ -4,6 +4,7 @@ from time import sleep
 
 import optparse
 import time
+import threading
 from OSC import *
 from settings import *
 
@@ -26,9 +27,10 @@ class ShiftReg:
 		self.write(self.latch_pin, 0)
 
 	def write(self, pin, value):
-		path = '/sys/class/gpio/gpio%d/value' % pin
-		with open(path, 'w') as f:
-			f.write('1' if value else '0')
+		pass
+		#path = '/sys/class/gpio/gpio%d/value' % pin
+		#with open(path, 'w') as f:
+		#	f.write('1' if value else '0')
 
 	def latch(self):
 		self.write(self.latch_pin, 1)
@@ -44,6 +46,11 @@ def read_lines(filename):
 	with open(filename) as f:
 		for line in f:
 			yield line.strip()
+
+def osc_handle_pattern(addr, tags, data, client_address):
+	""" handle incoming OSC message """
+	print("pattern received: {0}".format(data))
+	pass
 
 def main():
 	# read command line options
@@ -86,6 +93,8 @@ def main():
 
 	(options,args) = parser.parse_args()
 
+	s = None
+	st = None
 	try:
 		if options.testmode:
 			print("Test mode runs forever, press CTRL+C if you want to quit")
@@ -93,11 +102,24 @@ def main():
 			sr = ShiftReg(latch = get_setting('latch_pin'), clock = get_setting('clock_pin'), data = get_setting('data_pin') )
 			sr.setup()
 			for frame in cycle(read_lines(options.sequence_file)):
+				print("sending frame: {0}".format(frame))
 				for pixel in frame:
 					sr.shift_bit(pixel == '#')
 				sr.latch()
-				sleep(option.interval)
+				sleep(options.interval)
+		else:
+			print("Starting OSC server, listening on address {0}".format(default_host_address))
+			s = ThreadingOSCServer(default_host_address)
+			s.addDefaultHandlers()
+			s.addMsgHandler("/pattern", osc_handle_pattern)
+			st = threading.Thread(target=s.serve_forever)
+			st.start()
+			while True:
+				sleep(0.1)
 	except KeyboardInterrupt, e:
+		#if s: 
+		#	s.close()  # stop server thread if running
+			#st.join()
 		print
 		print "Roger that. Goodbye!"
 		pass
