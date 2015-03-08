@@ -109,17 +109,14 @@ def main():
 				sleep(options.interval)
 		else:
 			print("Starting OSC server, listening on address {0}".format(default_host_address))
-			s = ThreadingOSCServer(default_host_address)
+			s = OSCServer(default_host_address)
 			s.addDefaultHandlers()
 			s.addMsgHandler("/pattern", osc_handle_pattern)
-			st = threading.Thread(target=s.serve_forever)
-			st.start()
 			while True:
-				sleep(0.1)
+				s.handle_request()
+				sleep(0.01)
 	except KeyboardInterrupt, e:
-		#if s: 
-		#	s.close()  # stop server thread if running
-			#st.join()
+		s.close()  # stop server thread if running
 		print
 		print "Roger that. Goodbye!"
 		pass
