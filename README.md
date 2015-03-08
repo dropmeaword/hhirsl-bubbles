@@ -23,6 +23,6 @@ The sequence is defined in a plain text file, one line per sequence. The charact
 ## Running the driver
 To run the driver in listening mode, run the following command:
 
-    $ python bubbles.py --listen-port 12345
+    $ python driver/bubbles.py --listen-port 12345
 
 This will set the driver to listen to OSC messages on the port specified.
