@@ -108,8 +108,9 @@ def main():
 				sr.latch()
 				sleep(options.interval)
 		else:
-			print("Starting OSC server, listening on address {0}".format(default_host_address))
-			s = OSCServer(default_host_address)
+			host_address = (default_host_address[0], options.listen_port)
+			print("Starting OSC server, listening on address {0}".format(host_address))
+			s = OSCServer(host_address)
 			s.addDefaultHandlers()
 			s.addMsgHandler("/pattern", osc_handle_pattern)
 			while True:
